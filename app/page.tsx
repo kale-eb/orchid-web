@@ -44,6 +44,7 @@ function LeafIcon() {
 }
 
 const EMAIL_KEY = "orchid_email";
+const NAME_KEY = "orchid_name";
 
 export default function HomePage() {
   // Email gate
@@ -81,7 +82,7 @@ export default function HomePage() {
     const saved = localStorage.getItem(EMAIL_KEY);
     if (saved) {
       setEmailSubmitted(true);
-      setSenderName(saved.split("@")[0]); // pre-fill name from email
+      setSenderName(localStorage.getItem(NAME_KEY) || saved.split("@")[0]);
     }
   }, []);
 
@@ -91,21 +92,26 @@ export default function HomePage() {
       setEmailError("Please enter a valid email");
       return;
     }
+    const name = senderName.trim();
+    if (!name) {
+      setEmailError("Please enter a nickname");
+      return;
+    }
     setEmailError(null);
     setEmailLoading(true);
     try {
       const res = await fetch("/api/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed }),
+        body: JSON.stringify({ email: trimmed, name }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || "Something went wrong");
       }
       localStorage.setItem(EMAIL_KEY, trimmed);
+      localStorage.setItem(NAME_KEY, name);
       setEmailSubmitted(true);
-      setSenderName(trimmed.split("@")[0]);
     } catch (err) {
       setEmailError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -351,9 +357,27 @@ export default function HomePage() {
             margin: 0,
           }}
         >
-          Create a wallpaper and send it straight to my phone. Drop your email so we know you&apos;re a real person!
+          {"Create a wallpaper and send it straight to my phone. Enter your email to get started! (we need to make sure you're a real person)"}
         </p>
         <div style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
+          <input
+            type="text"
+            placeholder="Your nickname"
+            value={senderName}
+            onChange={(e) => setSenderName(e.target.value)}
+            maxLength={30}
+            style={{
+              width: "100%",
+              padding: "14px 16px",
+              borderRadius: 14,
+              border: "1.5px solid #E8E8EE",
+              fontSize: 16,
+              outline: "none",
+              background: "white",
+              boxSizing: "border-box",
+              textAlign: "center",
+            }}
+          />
           <input
             type="email"
             placeholder="your@email.com"
@@ -442,7 +466,7 @@ export default function HomePage() {
             lineHeight: 1.5,
           }}
         >
-          Want to hijack your partner&apos;s or friend&apos;s wallpaper anytime you want? Download Orchid and take over their screen.
+          {"Want to hijack your partner's or friend's wallpaper anytime you want? Download Orchid and take over their screen."}
         </p>
         <a
           href="https://apps.apple.com/app/apple-store/id6761027422?pt=128694142&ct=hijack-my-wallpaper&mt=8"
@@ -620,36 +644,18 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Name input + Send */}
+      {/* Send button */}
       <div
         style={{
-          display: "flex",
-          gap: 8,
           padding: "8px 16px",
-          alignItems: "center",
         }}
       >
-        <input
-          type="text"
-          placeholder="Your name"
-          value={senderName}
-          onChange={(e) => setSenderName(e.target.value)}
-          maxLength={30}
-          style={{
-            flex: 1,
-            padding: "10px 14px",
-            borderRadius: 12,
-            border: "1.5px solid #E8E8EE",
-            fontSize: 15,
-            outline: "none",
-            background: "white",
-          }}
-        />
         <button
           onClick={handleSend}
           disabled={sending}
           style={{
-            padding: "10px 20px",
+            width: "100%",
+            padding: "12px 20px",
             borderRadius: 12,
             border: "none",
             background: "var(--accent)",
@@ -658,11 +664,10 @@ export default function HomePage() {
             fontWeight: 700,
             cursor: sending ? "not-allowed" : "pointer",
             opacity: sending ? 0.7 : 1,
-            whiteSpace: "nowrap",
             transition: "all 0.15s ease",
           }}
         >
-          {sending ? "Sending..." : "Send"}
+          {sending ? "Sending..." : `Send as ${senderName || "Anonymous"}`}
         </button>
       </div>
 

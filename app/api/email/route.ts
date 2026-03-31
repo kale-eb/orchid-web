@@ -6,6 +6,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const email = (body.email || "").trim().toLowerCase();
+    const name = (body.name || "").trim();
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest) {
     await db.collection("waitlist").doc(email).set(
       {
         email,
+        ...(name ? { name } : {}),
         createdAt: FieldValue.serverTimestamp(),
       },
       { merge: true }
