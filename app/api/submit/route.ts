@@ -64,6 +64,8 @@ export async function POST(req: NextRequest) {
     const userData = userDoc.data();
     const fcmToken = userData?.fcmToken;
     console.log("[submit] User doc exists:", userDoc.exists, "| fcmToken:", fcmToken ? fcmToken.substring(0, 20) + "..." : "NONE");
+    let fcmStatus = "no_token";
+    let fcmError = "";
     if (fcmToken) {
       try {
         const fcmResult = await getFcm().send({
@@ -83,8 +85,11 @@ export async function POST(req: NextRequest) {
             },
           },
         });
+        fcmStatus = "sent";
         console.log("[submit] FCM sent successfully, message ID:", fcmResult);
-      } catch (err) {
+      } catch (err: unknown) {
+        fcmStatus = "error";
+        fcmError = err instanceof Error ? err.message : String(err);
         console.error("[submit] FCM send FAILED:", err);
       }
     } else {
@@ -92,7 +97,10 @@ export async function POST(req: NextRequest) {
     }
 
     console.log(`[submit] SUCCESS — Wallpaper from "${name}" uploaded: ${filename}`);
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      debug: { targetUid: TARGET_UID, firestoreOk: true, fcmToken: fcmToken ? "present" : "missing", fcmStatus, fcmError },
+    });
   } catch (err) {
     console.error("[submit] Error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
