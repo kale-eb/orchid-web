@@ -351,7 +351,7 @@ export default function HomePage() {
             margin: 0,
           }}
         >
-          Create a wallpaper and send it straight to my phone. Enter your email to get started!
+          Create a wallpaper and send it straight to my phone. Drop your email so we know you&apos;re a real person!
         </p>
         <div style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", gap: 10 }}>
           <input
@@ -397,7 +397,7 @@ export default function HomePage() {
           )}
         </div>
         <p style={{ fontSize: 11, color: "var(--text-secondary)", margin: "8px 0 0", opacity: 0.6 }}>
-          No spam, ever.
+          Just a quick verification — no spam, ever.
         </p>
       </div>
     );
